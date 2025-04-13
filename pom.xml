@@ -55,7 +55,7 @@
 			<version>3.2.4</version>
 		</dependency>
 
-		<!-- Spring Boot Security -->
+<!--		 Spring Boot Security -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -171,6 +171,8 @@
 						</exclude>
 					</excludes>
 				</configuration>
+
+
 			</plugin>
 		</plugins>
 	</build>
