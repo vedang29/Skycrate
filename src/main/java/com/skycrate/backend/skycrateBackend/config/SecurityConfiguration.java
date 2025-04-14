@@ -63,8 +63,10 @@ public class SecurityConfiguration {
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {}) // 🔥 This line enables CORS and connects to your CorsConfigurationSource bean
                 .build();
     }
+
 
 
 //    @Bean
@@ -85,15 +87,19 @@ public class SecurityConfiguration {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Replace with your frontend origin(s)
-        configuration.setAllowedMethods(List.of("GET", "PUT", "DELETE", "POST", "OPTIONS"));
+
+        // 🔥 Allow all origins (wildcard) safely with credentials
+        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true); // Important when using Authorization headers
+        configuration.setAllowCredentials(true); // Needed for cookies / Authorization headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
 }
