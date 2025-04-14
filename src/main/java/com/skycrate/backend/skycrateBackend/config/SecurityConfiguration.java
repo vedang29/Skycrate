@@ -28,26 +28,44 @@ public class SecurityConfiguration {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http.csrf()
+//                .disable()
+//                .authorizeHttpRequests()
+//                .requestMatchers("/api/hdfs/**") // Specific API endpoints that don't require authentication
+//                .permitAll()
+//                .requestMatchers("/api/**") // Other endpoints that should be open
+//                .permitAll()
+//                .anyRequest()
+//                .authenticated() // All other requests require authentication
+//                .and()
+//                .sessionManagement()
+//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .and()
+//                .authenticationProvider(authenticationProvider)
+//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf()
-                .disable()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/hdfs/**") // Specific API endpoints that don't require authentication
-                .permitAll()
-                .requestMatchers("/api/**") // Other endpoints that should be open
-                .permitAll()
-                .anyRequest()
-                .authenticated() // All other requests require authentication
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
+        return http
+                .securityMatcher("/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/hdfs/**", "/api/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable())
+                .build();
     }
+
 
 //    @Bean
 //    CorsConfigurationSource corsConfigurationSource() {
