@@ -19,6 +19,11 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
 
+import org.springframework.core.io.FileSystemResource; // For FileSystemResource
+import org.springframework.core.io.Resource; // For Resource
+import org.springframework.http.HttpHeaders; // For HttpHeaders
+import java.io.File; // For java.io.File
+
 import static com.skycrate.backend.skycrateBackend.utils.KeyUtil.getPrivateKeyForUser;
 import static com.skycrate.backend.skycrateBackend.utils.KeyUtil.getPublicKeyForUser;
 
@@ -86,15 +91,31 @@ public class HDFScontroller {
 
 
     @PostMapping("/downloadFile")
-    public ResponseDTO downloadFile(
+    public ResponseEntity<?> downloadFile(
             @RequestParam String hdfsPath,
-            @RequestParam String localPath,
             @RequestParam String username) {
         try {
+            // Define a temporary local path to download the file
+            String localPath = "/app/tmp/downloaded/" + new File(hdfsPath).getName(); // Adjust the path as needed
+
+            // Download the file from HDFS to the local path
             hdfsOperations.downloadFile(hdfsPath, localPath, username);
-            return new ResponseDTO("File downloaded successfully", true);
+
+            // Create a File object for the downloaded file
+            File file = new File(localPath);
+            if (!file.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ResponseDTO("File not found", false));
+            }
+
+            // Create a Resource from the file
+            Resource resource = new FileSystemResource(file);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
         } catch (Exception e) {
-            return new ResponseDTO("Failed to download file: " + e.getMessage(), false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO("Failed to download file: " + e.getMessage(), false));
         }
     }
 
