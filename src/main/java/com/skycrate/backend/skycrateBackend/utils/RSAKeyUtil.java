@@ -52,19 +52,29 @@ public class RSAKeyUtil {
         keyGenerator.init(keySize); // Specify the key size
         return keyGenerator.generateKey();
     }
+//
+//    // Encrypt AES Key using RSA
+//    public static byte[] encryptAESKey(SecretKey aesKey, PublicKey publicKey) throws Exception {
+//        return encrypt(aesKey.getEncoded(), publicKey); // Encrypt the AES key using RSA
+//    }
+//
+//    // Decrypt AES Key using RSA
+//    public static SecretKey decryptAESKey(byte[] encryptedAESKey, PrivateKey privateKey, int keySize) throws Exception {
+//        byte[] decryptedKey = decrypt(encryptedAESKey, privateKey); // Decrypt with RSA
+//        // Ensure that the decrypted key length matches the expected AES key size
+//        if (decryptedKey.length != keySize / 8) {
+//            throw new IllegalArgumentException("Decrypted key size does not match expected AES key size.");
+//        }
+//        return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES"); // Convert to AES Key
+//    }
 
-    // Encrypt AES Key using RSA
     public static byte[] encryptAESKey(SecretKey aesKey, PublicKey publicKey) throws Exception {
-        return encrypt(aesKey.getEncoded(), publicKey); // Encrypt the AES key using RSA
+        return encrypt(aesKey.getEncoded(), publicKey);
     }
 
-    // Decrypt AES Key using RSA
     public static SecretKey decryptAESKey(byte[] encryptedAESKey, PrivateKey privateKey, int keySize) throws Exception {
-        byte[] decryptedKey = decrypt(encryptedAESKey, privateKey); // Decrypt with RSA
-        // Ensure that the decrypted key length matches the expected AES key size
-        if (decryptedKey.length != keySize / 8) {
-            throw new IllegalArgumentException("Decrypted key size does not match expected AES key size.");
-        }
-        return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES"); // Convert to AES Key
+        byte[] decryptedKey = decrypt(encryptedAESKey, privateKey);
+        return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
     }
+
 }
