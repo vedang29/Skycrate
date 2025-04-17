@@ -23,13 +23,13 @@ public class EncryptionUtil {
         // Step 1: Generate AES Key
         SecretKey aesKey = generateAESKey();
 
-        // Step 2: Encrypt data using AES
-        Cipher aesCipher = Cipher.getInstance(AES_ALGORITHM);
+        // Encrypt data using AES
+        Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
         byte[] encryptedData = aesCipher.doFinal(data);
 
-        // Step 3: Encrypt the AES key with RSA
-        Cipher rsaCipher = Cipher.getInstance(RSA_ALGORITHM);
+        // Encrypt the AES key with RSA
+        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] encryptedAesKey = rsaCipher.doFinal(aesKey.getEncoded());
 
@@ -65,13 +65,15 @@ public class EncryptionUtil {
         System.arraycopy(encryptedCombined, 4 + aesKeyLength, encryptedData, 0, encryptedData.length);
 
         // Step 3: Decrypt the AES key using RSA
-        Cipher rsaCipher = Cipher.getInstance(RSA_ALGORITHM);
+        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
         byte[] aesKeyBytes = rsaCipher.doFinal(encryptedAesKey);
-        SecretKey aesKey = new SecretKeySpec(aesKeyBytes, AES_ALGORITHM);
 
-        // Step 4: Decrypt the data using AES
-        Cipher aesCipher = Cipher.getInstance(AES_ALGORITHM);
+        // Create AES key
+        SecretKey aesKey = new SecretKeySpec(aesKeyBytes, "AES");
+
+        // Decrypt the data using AES
+        Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
         return aesCipher.doFinal(encryptedData);
     }

@@ -1,10 +1,15 @@
 package com.skycrate.backend.skycrateBackend.services;
 
 import com.skycrate.backend.skycrateBackend.config.HDFSConfig;
-import com.skycrate.backend.skycrateBackend.utils.KeyUtil;
+import com.skycrate.backend.skycrateBackend.models.User;
+import com.skycrate.backend.skycrateBackend.repository.UserRepository;
+import com.skycrate.backend.skycrateBackend.utils.RSAKeyUtil;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
@@ -12,6 +17,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -25,49 +32,91 @@ import java.util.List;
 
 @Service
 public class HDFSOperations {
+    private final UserRepository userRepository;
 
-    public void uploadFile(String localPath, String hdfsPath, String uploadedFileName, String username) {
+    @Autowired
+    public HDFSOperations(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public void uploadFile(byte[] fileData, String hdfsPath, String uploadedFileName, String username) {
         try {
             FileSystem fs = HDFSConfig.getHDFS();
-            byte[] data = Files.readAllBytes(Paths.get(localPath)); // Read file as bytes
 
-            // Encrypt file (consider adding encryption here as needed)
-            byte[] encryptedData = data;
+            // Create an InputStream from the byte array
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(fileData);
 
-            String tempFilePath = localPath + ".enc";
-            Files.write(Paths.get(tempFilePath), encryptedData);
-
+            // Prepare the path for HDFS
             String finalHdfsPath = hdfsPath.endsWith("/") ? hdfsPath + uploadedFileName : hdfsPath + "/" + uploadedFileName;
-            fs.copyFromLocalFile(new Path(tempFilePath), new Path(finalHdfsPath));
 
-            Files.delete(Paths.get(tempFilePath));
+            // Upload the file directly to HDFS from the InputStream
+            Path hdfsFilePath = new Path(finalHdfsPath);
+            FSDataOutputStream outputStream = fs.create(hdfsFilePath);
+            IOUtils.copyBytes(inputStream, outputStream, 4096, true);
+
         } catch (IOException e) {
             // Handle I/O exception and log the error
-            throw new RuntimeException("Failed to upload file due to I/O issue: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to upload file to HDFS: " + e.getMessage(), e);
         } catch (Exception e) {
             // Catch any other exceptions
-            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to upload file to HDFS: " + e.getMessage(), e);
         }
     }
 
-    public void downloadFile(String hdfsPath, String localPath, String username) {
+    public void downloadFile(String hdfsEncPath, String localPathWithoutExt, String username) {
         try {
             FileSystem fs = HDFSConfig.getHDFS();
-            String tempFilePath = localPath + ".enc";
 
-            fs.copyToLocalFile(new Path(hdfsPath), new Path(tempFilePath));
+            // Extract file name and extension
+            String encFileName = new File(hdfsEncPath).getName();
+            String originalFileName = encFileName.replace(".enc", "");
+            String fileExtension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
 
-            byte[] encryptedData = Files.readAllBytes(Paths.get(tempFilePath));
-            byte[] decryptedData = encryptedData; // Decrypt if needed
+            String fullDecryptedPath = localPathWithoutExt + "/" + originalFileName;
+            String encFilePath = fullDecryptedPath + ".enc";
+            String keyFilePath = fullDecryptedPath + ".key";
 
-            Files.write(Paths.get(localPath), decryptedData);
-            Files.delete(Paths.get(tempFilePath));
-        } catch (IOException e) {
-            // Handle I/O exception and log the error
-            throw new RuntimeException("Failed to download file due to I/O issue: " + e.getMessage(), e);
+            // Download encrypted file and AES key from HDFS
+            fs.copyToLocalFile(new Path(hdfsEncPath), new Path(encFilePath));
+            fs.copyToLocalFile(new Path(hdfsEncPath.replace(".enc", ".key")), new Path(keyFilePath));
+
+            // Read the encrypted AES key
+            byte[] encryptedAesKey = Files.readAllBytes(Paths.get(keyFilePath));
+            System.out.println("Length of encrypted AES key: " + encryptedAesKey.length);
+
+            // Retrieve the RSA private key for the user
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            PrivateKey privateKey = RSAKeyUtil.getPrivateKeyFromBytes(user.getPrivateKey());
+
+            Cipher rsaCipher = Cipher.getInstance("RSA");
+            rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] aesKeyBytes = rsaCipher.doFinal(encryptedAesKey);
+
+            // Ensure valid AES key length
+            if (aesKeyBytes.length != 16 && aesKeyBytes.length != 24 && aesKeyBytes.length != 32) {
+                throw new RuntimeException("Invalid AES key length: " + aesKeyBytes.length + " bytes");
+            }
+
+            SecretKey aesKey = new SecretKeySpec(aesKeyBytes, 0, aesKeyBytes.length, "AES");
+
+            // Read the encrypted file content
+            byte[] encryptedFileContent = Files.readAllBytes(Paths.get(encFilePath));
+
+            // Decrypt the file content using AES
+            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // Specify padding
+            aesCipher.init(Cipher.DECRYPT_MODE, aesKey);
+            byte[] decryptedFileContent = aesCipher.doFinal(encryptedFileContent);
+
+            // Write the decrypted content to the original file
+            Files.write(Paths.get(fullDecryptedPath + "." + fileExtension), decryptedFileContent);
+
+            // Cleanup temporary files
+            Files.deleteIfExists(Paths.get(encFilePath));
+            Files.deleteIfExists(Paths.get(keyFilePath));
+
         } catch (Exception e) {
-            // Catch any other exceptions
-            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to download or decrypt file: " + e.getMessage(), e);
         }
     }
 

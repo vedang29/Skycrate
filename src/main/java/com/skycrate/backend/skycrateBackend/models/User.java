@@ -1,4 +1,4 @@
-package  com.skycrate.backend.skycrateBackend.models;
+package com.skycrate.backend.skycrateBackend.models;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,7 +14,7 @@ import jakarta.persistence.*;
 @Table(name = "users")
 @Entity
 public class User implements UserDetails {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
@@ -24,54 +23,48 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String username;
 
-    /*
-    
-   //Optional feature might add later
-
-    @Column(name = "verification_code")
-    private String verificationCode;
-
-    @Column(name ="verification_expiry")
-    private LocalDateTime verificationExpiry;
-
-    */
-
     @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    
-    
-    public User(){
-    }
+    // ✅ Add RSA key fields
+    @Lob
+    @Column(name = "public_key", columnDefinition = "BLOB")
+    private byte[] publicKey;
 
-    public User(String firstname,String lastname,String email,String password){
-        this.username=firstname+lastname;
-        this.email=email;
-        this.password=password;
-    }
+    @Lob
+    @Column(name = "private_key", columnDefinition = "BLOB")
+    private byte[] privateKey;
 
 
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
     private Date createdAt;
 
-    
+    public User() {}
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities(){
-        return List.of();
+    public User(String firstname, String lastname, String email, String password) {
+        this.username = firstname + lastname;
+        this.email = email;
+        this.password = password;
     }
 
-    public String getPassword() {
-        return password;
+    // ⬇️ Required by Spring Security
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
     }
 
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override
@@ -93,6 +86,8 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    // ⬇️ Getters and Setters
     public Integer getId() {
         return id;
     }
@@ -101,13 +96,11 @@ public class User implements UserDetails {
         this.id = id;
     }
 
-    
-
-    public void setFullname(String firstname,String lastname) {
-        this.username=firstname+lastname;
+    public void setFullname(String firstname, String lastname) {
+        this.username = firstname + lastname;
     }
 
-    public String getFullname(String firstname,String lastname){
+    public String getFullname() {
         return this.username;
     }
 
@@ -125,5 +118,22 @@ public class User implements UserDetails {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    // ✅ Getters and setters for RSA keys
+    public byte[] getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(byte[] publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public byte[] getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(byte[] privateKey) {
+        this.privateKey = privateKey;
     }
 }
