@@ -73,28 +73,29 @@ public class HDFScontroller {
             @RequestParam String uploadedFileName,
             @RequestParam String username) {
         try {
-            // Retrieve the user from the database using the username
-            User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Get the public key from the user entity
+            // Step 1: Retrieve the user and their RSA public key
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
             byte[] publicKeyBytes = user.getPublicKey();
             PublicKey publicKey = RSAKeyUtil.getPublicKeyFromBytes(publicKeyBytes);
 
-            // Encrypt the file content using the public key
-            byte[] encryptedData = encryptFile(file, publicKey);
+            // Step 2: Encrypt the file content using hybrid encryption (AES + RSA)
+            byte[] fileBytes = file.getBytes();
+            byte[] encryptedData = EncryptionUtil.encrypt(fileBytes, publicKey);
 
-            // Upload the encrypted file to HDFS
+            // Step 3: Upload encrypted data to HDFS
             hdfsOperations.uploadFile(encryptedData, hdfsPath, uploadedFileName, username);
 
             return new ResponseDTO("File uploaded successfully", true);
         } catch (IOException e) {
             e.printStackTrace();
-            return new ResponseDTO("Failed to upload file locally: " + e.getMessage(), false);
+            return new ResponseDTO("Failed to read file: " + e.getMessage(), false);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseDTO("Failed to upload file to HDFS: " + e.getMessage(), false);
         }
     }
+
 
     // Helper method to encrypt the file content using RSA encryption
     private byte[] encryptFile(MultipartFile file, PublicKey publicKey) throws Exception {
