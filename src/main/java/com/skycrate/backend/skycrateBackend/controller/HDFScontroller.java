@@ -279,4 +279,25 @@ public class HDFScontroller {
                     .body("Failed to list files: " + e.getMessage());
         }
     }
+
+
+    @GetMapping("/getUsernameByEmail")
+    public ResponseEntity<?> getUsernameByEmail(@RequestParam String email) {
+        try {
+            // Fetch user from the database using the provided email
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+//            // Log the retrieved user object to verify the username
+//            System.out.println("Retrieved user: " + user.getFullname());
+
+            // Return the username as the response
+            return ResponseEntity.ok(user.getFullname()); // Return the username
+        } catch (Exception e) {
+            // Handle error if user is not found or other exceptions occur
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to fetch username: " + e.getMessage());
+        }
+    }
+
 }
