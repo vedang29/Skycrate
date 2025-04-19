@@ -25,6 +25,6 @@ WORKDIR /app
 # Switch user
 USER skycrateBack
 
-# EXPOSE 8080
+EXPOSE 8081
 
 CMD ["java", "-jar", "/app/skycrateBackend-0.0.1-SNAPSHOT.jar"]
