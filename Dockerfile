@@ -19,7 +19,7 @@ RUN useradd -s /bin/bash skycrateBack
 # Create work dir
 RUN mkdir /app
 RUN chown -R skycrateBack:skycrateBack /app
-COPY ./Skycrate/target/ /app
+COPY ./target/ /app
 WORKDIR /app
 
 # Switch user
