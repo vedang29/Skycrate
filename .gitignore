@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### apach-maven binary ###
+apache-maven-3.9.6
