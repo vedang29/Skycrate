@@ -12,8 +12,8 @@ import java.security.PrivilegedExceptionAction;
 public class HDFSConfig {
     public static FileSystem getHDFS() throws Exception {
         Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", "hdfs://192.168.29.56:9000");
-        return FileSystem.get(new URI("hdfs://192.168.29.56:9000"), conf);
+        conf.set("fs.defaultFS", "hdfs://namenode:9000");
+        return FileSystem.get(new URI("hdfs://namenode:9000"), conf);
     }
 
 
