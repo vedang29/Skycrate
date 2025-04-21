@@ -22,6 +22,10 @@ RUN chown -R skycrateBack:skycrateBack /app
 COPY ./target/ /app
 WORKDIR /app
 
+# Create temp download directory
+RUN mkdir -p /Skycrate/downloaded/
+RUN chown -R skycrateBack:skycrateBack /Skycrate /Skycrate/downloaded/
+
 # Switch user
 USER skycrateBack
 
