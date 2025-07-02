@@ -1,7 +1,7 @@
 package com.skycrate.backend.skycrateBackend.controller;
 
 import com.skycrate.backend.skycrateBackend.dto.LoginRequest;
-import com.skycrate.backend.skycrateBackend.security.JwtService;
+import com.skycrate.backend.skycrateBackend.services.JwtService;
 import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import com.skycrate.backend.skycrateBackend.security.TokenBlacklistService;

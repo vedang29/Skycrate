@@ -2,6 +2,7 @@ package com.skycrate.backend.skycrateBackend.security;
 
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import com.skycrate.backend.skycrateBackend.entity.User;
+import com.skycrate.backend.skycrateBackend.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
