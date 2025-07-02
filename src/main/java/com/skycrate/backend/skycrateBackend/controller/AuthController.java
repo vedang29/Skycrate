@@ -66,4 +66,25 @@ public class AuthController {
 
         return ResponseEntity.ok("Logged out successfully");
     }
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody TokenRefreshRequest request) {
+        String requestToken = request.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestToken)
+                .map(token -> {
+                    if (refreshTokenService.isExpired(token)) {
+                        return ResponseEntity.status(403).body("Refresh token expired");
+                    }
+
+                    User user = token.getUser();
+                    String newAccessToken = jwtService.generateToken(user);
+                    return ResponseEntity.ok(new TokenRefreshResponse(newAccessToken, requestToken));
+                })
+                .orElseGet(() -> ResponseEntity.status(403).body("Invalid refresh token"));
+    }
+
 }
