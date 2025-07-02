@@ -5,6 +5,7 @@ import com.skycrate.backend.skycrateBackend.services.JwtService;
 import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import com.skycrate.backend.skycrateBackend.security.TokenBlacklistService;
+import com.skycrate.backend.skycrateBackend.services.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest servletRequest) {
-        String ip = servletRequest.getRemoteAddr(); // or use request.getEmail() as key
+        String ip = servletRequest.getRemoteAddr();
 
         if (rateLimiterService.isBlocked(ip)) {
             return ResponseEntity.status(429).body("Too many login attempts. Please try again later.");
@@ -44,6 +45,18 @@ public class AuthController {
         }
 
         User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        rateLimiterService.resetAttempts(ip);
+
+        // ✅ Generate tokens
+        String accessToken = jwtService.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken.getToken()));
+    }
+
+    User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         rateLimiterService.resetAttempts(ip);
