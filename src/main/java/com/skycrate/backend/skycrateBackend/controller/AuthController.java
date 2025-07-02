@@ -27,6 +27,9 @@ public class AuthController {
         this.userRepository = userRepository;
     }
 
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest servletRequest) {
         String ip = servletRequest.getRemoteAddr();
@@ -67,21 +70,24 @@ public class AuthController {
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body("Missing or invalid Authorization header");
-        }
-
-        String token = authHeader.substring(7);
-        tokenBlacklistService.blacklistToken(token);
-
-        return ResponseEntity.ok("Logged out successfully");
+@PostMapping("/logout")
+public ResponseEntity<?> logout(HttpServletRequest request) {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        return ResponseEntity.badRequest().body("Missing or invalid Authorization header");
     }
 
-    @Autowired
-    private RefreshTokenService refreshTokenService;
+    String token = authHeader.substring(7);
+
+    // Blacklist access token
+    tokenBlacklistService.blacklistToken(token);
+
+    // Extract user from token and delete their refresh token
+    String email = jwtService.extractUsername(token);
+    userRepository.findByEmail(email).ifPresent(refreshTokenService::deleteByUser);
+
+    return ResponseEntity.ok("Logged out successfully");
+}
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestBody TokenRefreshRequest request) {

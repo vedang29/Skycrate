@@ -39,4 +39,9 @@ public class RefreshTokenService {
     public boolean isExpired(RefreshToken token) {
         return token.getExpiryDate().isBefore(Instant.now());
     }
+
+    public void deleteByUser(User user) {
+        refreshTokenRepo.deleteByUser(user);
+    }
+
 }
