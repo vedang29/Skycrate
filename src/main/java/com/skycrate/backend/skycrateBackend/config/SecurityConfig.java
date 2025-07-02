@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 .includeSubDomains(true)
                                 .maxAgeInSeconds(31536000)
                         )
-                        .xssProtection(xss -> xss.block(true))
+                        // Spring Security 6+ no longer supports xss.block(true), so we just enable or disable it.
+                        .xssProtection(xss -> xss.disable())
                         .frameOptions(frame -> frame.deny())
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -14,7 +14,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User implements UserDetails {
 
     @Id
@@ -38,6 +37,16 @@ public class User implements UserDetails {
 
     @Lob
     private byte[] privateKey;
+
+    @Builder
+    public User(String email, String password, String username, String fullname, byte[] publicKey, byte[] privateKey) {
+        this.email = email;
+        this.password = password;
+        this.username = username;
+        this.fullname = fullname;
+        this.publicKey = publicKey;
+        this.privateKey = privateKey;
+    }
 
     // --- UserDetails interface methods ---
     @Override
@@ -73,46 +82,5 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    // --- Extra getter methods for HDFScontroller compatibility ---
-    public byte[] getPublicKey() {
-        return publicKey;
-    }
-
-    public byte[] getPrivateKey() {
-        return privateKey;
-    }
-
-    public String getFullname() {
-        return fullname;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }
