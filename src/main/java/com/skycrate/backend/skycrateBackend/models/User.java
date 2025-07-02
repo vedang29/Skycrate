@@ -1,6 +1,5 @@
 package com.skycrate.backend.skycrateBackend.models;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -13,7 +12,7 @@ import jakarta.persistence.*;
 
 @Table(name = "users")
 @Entity
-public class User implements UserDetails {
+public class User extends com.skycrate.backend.skycrateBackend.entity.User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,9 +2,8 @@ package com.skycrate.backend.skycrateBackend.controller;
 
 import com.skycrate.backend.skycrateBackend.config.HDFSConfig;
 import com.skycrate.backend.skycrateBackend.dto.ResponseDTO;
-import com.skycrate.backend.skycrateBackend.models.User;
+import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
-import com.skycrate.backend.skycrateBackend.services.EncryptionUtil;
 import com.skycrate.backend.skycrateBackend.services.HDFSOperations;
 import com.skycrate.backend.skycrateBackend.utils.KeyUtil;
 import com.skycrate.backend.skycrateBackend.utils.RSAKeyUtil;
@@ -35,9 +34,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File; // For java.io.File
-
-import static com.skycrate.backend.skycrateBackend.utils.KeyUtil.getPrivateKeyForUser;
-import static com.skycrate.backend.skycrateBackend.utils.KeyUtil.getPublicKeyForUser;
 
 @RestController
 @RequestMapping("/api/hdfs")
