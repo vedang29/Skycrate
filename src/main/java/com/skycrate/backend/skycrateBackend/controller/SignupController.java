@@ -1,7 +1,7 @@
 package com.skycrate.backend.skycrateBackend.controller;
 
 import com.skycrate.backend.skycrateBackend.dto.SignupRequest;
-import com.skycrate.backend.skycrateBackend.service.UserService;
+import com.skycrate.backend.skycrateBackend.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
