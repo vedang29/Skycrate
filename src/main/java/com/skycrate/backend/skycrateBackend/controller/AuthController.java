@@ -1,58 +1,42 @@
 package com.skycrate.backend.skycrateBackend.controller;
 
-import org.springframework.web.bind.annotation.RestController;
-
-import com.skycrate.backend.skycrateBackend.dto.LoginUserDto;
-import com.skycrate.backend.skycrateBackend.dto.RegisterUserDto;
-import com.skycrate.backend.skycrateBackend.models.User;
-import com.skycrate.backend.skycrateBackend.responses.LoginResponse;
-import com.skycrate.backend.skycrateBackend.services.AuthenticationService;
-import com.skycrate.backend.skycrateBackend.services.JwtService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.skycrate.backend.skycrateBackend.dto.LoginRequest;
+import com.skycrate.backend.skycrateBackend.security.JwtService;
+import com.skycrate.backend.skycrateBackend.entity.User;
+import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.*;
 
-
-@RequestMapping("/api")
 @RestController
+@RequestMapping("/api/auth")
 public class AuthController {
-   
+
+    private final AuthenticationManager authManager;
     private final JwtService jwtService;
-    private AuthenticationService authenticationService;
+    private final UserRepository userRepository;
 
-    public AuthController(JwtService jwtService,AuthenticationService authenticationService){
-        this.jwtService=jwtService;
-        this.authenticationService=authenticationService;
+    public AuthController(AuthenticationManager authManager, JwtService jwtService, UserRepository userRepository) {
+        this.authManager = authManager;
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
-    @GetMapping("/test")
-    public String teString(@RequestParam String param) {
-        return new String();
-    }
-    
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> LoginController(@RequestBody LoginUserDto entity) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        User authenticatedUser=authenticationService.authenticate(entity);
-        String jwtToken=jwtService.generateToken(authenticatedUser);
-        
-        LoginResponse loginResponse=new LoginResponse().setToken(jwtToken).setExpiresIn(jwtService.getExpirtationTime());
-        return ResponseEntity.ok(loginResponse);
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = jwtService.generateToken(user);
+        return ResponseEntity.ok().body(token);
     }
-    
-    @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody RegisterUserDto entity) {
-        User registeredUser=authenticationService.signUp(entity);
 
-        
-        return ResponseEntity.ok(registeredUser);
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // Client-side token deletion (or implement blacklist)
+        return ResponseEntity.ok("Logged out (client should delete token)");
     }
-    
-
-    
 }
