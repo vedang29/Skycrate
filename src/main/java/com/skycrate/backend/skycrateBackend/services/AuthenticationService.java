@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.skycrate.backend.skycrateBackend.dto.LoginUserDto;
 import com.skycrate.backend.skycrateBackend.dto.RegisterUserDto;
-import com.skycrate.backend.skycrateBackend.models.User;
+import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import com.skycrate.backend.skycrateBackend.utils.RSAKeyUtil;
 

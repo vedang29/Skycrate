@@ -1,7 +1,7 @@
 package com.skycrate.backend.skycrateBackend.services;
 
 import com.skycrate.backend.skycrateBackend.config.HDFSConfig;
-import com.skycrate.backend.skycrateBackend.models.User;
+import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import com.skycrate.backend.skycrateBackend.utils.RSAKeyUtil;
 import org.apache.hadoop.fs.FSDataOutputStream;
