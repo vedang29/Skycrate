@@ -31,7 +31,7 @@ public class FileMetadata {
     private byte[] iv;
 
     @Lob
-    @Column(nullable = false, name = "encrypted_key")
+    @Column(nullable = false, name = "encrypted_key", columnDefinition = "LONGBLOB")
     private byte[] encryptedKey;
 
     @Column(nullable = false)
