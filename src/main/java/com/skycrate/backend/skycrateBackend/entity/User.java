@@ -38,25 +38,37 @@ public class User implements UserDetails {
     @Lob
     private byte[] privateKey;
 
+    @Lob
+    @Column(nullable = false)
+    private byte[] privateKeySalt;
+
+    @Lob
+    @Column(nullable = false)
+    private byte[] privateKeyIv;
+
     @Builder
-    public User(String email, String password, String username, String fullname, byte[] publicKey, byte[] privateKey) {
+    public User(String email, String password, String username, String fullname,
+                byte[] publicKey, byte[] privateKey,
+                byte[] privateKeySalt, byte[] privateKeyIv) {
         this.email = email;
         this.password = password;
         this.username = username;
         this.fullname = fullname;
         this.publicKey = publicKey;
         this.privateKey = privateKey;
+        this.privateKeySalt = privateKeySalt;
+        this.privateKeyIv = privateKeyIv;
     }
 
     // --- UserDetails interface methods ---
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); // Add roles/authorities if needed
+        return List.of(); // No roles assigned currently
     }
 
     @Override
     public String getUsername() {
-        return username; // or return username if that's your login key
+        return username;
     }
 
     @Override
@@ -65,22 +77,14 @@ public class User implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return true; }
 }

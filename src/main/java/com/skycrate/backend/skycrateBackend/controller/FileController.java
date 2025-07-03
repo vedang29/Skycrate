@@ -4,6 +4,7 @@ import com.skycrate.backend.skycrateBackend.services.FileService;
 import com.skycrate.backend.skycrateBackend.services.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,20 +23,19 @@ public class FileController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(
+    public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("password") String password,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         try {
             String token = extractToken(request);
             String username = jwtService.extractUsername(token);
 
-            fileService.uploadEncryptedFile(username, password, file.getBytes(), file.getOriginalFilename());
+            fileService.uploadEncryptedFile(username, file.getBytes(), file.getOriginalFilename());
 
             return ResponseEntity.ok("File uploaded and encrypted successfully.");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("File upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Upload failed: " + e.getMessage());
         }
     }
 

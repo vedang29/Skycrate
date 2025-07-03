@@ -30,7 +30,10 @@ public class FileMetadata {
     @Column(nullable = false)
     private byte[] iv;
 
+    @Lob
+    @Column(nullable = false, name = "encrypted_key")
+    private byte[] encryptedKey;
+
     @Column(nullable = false)
     private long uploadedAt;
-
 }
