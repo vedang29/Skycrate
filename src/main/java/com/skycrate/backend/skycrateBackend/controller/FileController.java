@@ -53,10 +53,12 @@ public class FileController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentLength(decryptedData.length)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(decryptedData);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("File download failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("File download failed: " + e.getMessage());
         }
     }
 

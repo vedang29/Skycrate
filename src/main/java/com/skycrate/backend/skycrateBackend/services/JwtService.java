@@ -1,10 +1,10 @@
 package com.skycrate.backend.skycrateBackend.services;
 
 import com.skycrate.backend.skycrateBackend.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +15,17 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // Recommend moving this key to environment variable or config file
-    private static final String SECRET_KEY = "your-256-bit-secret-your-256-bit-secret"; // must be 256-bit
+    @Value("${security.jwt.secret-key}")
+    private String secretKey;
 
-    private final long EXPIRATION_TIME = 1000 * 60 * 15; // 15 minutes
+    @Value("${security.jwt.expiration-time}")
+    private long expirationTime;
+
+    private static final String SECRET_KEY = "PPp27xSTfBwOpRn4/AV6gPzQSnQg+Oi80KdWfCcuAHs=";
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
@@ -54,12 +58,11 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Overload for your entity
     public String generateToken(User user) {
         return generateToken((UserDetails) user);
     }

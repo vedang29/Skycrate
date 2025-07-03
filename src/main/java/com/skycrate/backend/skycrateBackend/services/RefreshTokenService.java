@@ -5,6 +5,7 @@ import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -22,8 +23,10 @@ public class RefreshTokenService {
         this.refreshTokenRepo = refreshTokenRepo;
     }
 
+    @Transactional
     public RefreshToken createRefreshToken(User user) {
-        refreshTokenRepo.deleteByUser(user); // Allow only 1 active token per user
+        refreshTokenRepo.deleteByUser(user);
+        refreshTokenRepo.flush();
 
         RefreshToken token = new RefreshToken();
         token.setUser(user);
@@ -40,8 +43,8 @@ public class RefreshTokenService {
         return token.getExpiryDate().isBefore(Instant.now());
     }
 
+    @Transactional
     public void deleteByUser(User user) {
         refreshTokenRepo.deleteByUser(user);
     }
-
 }
