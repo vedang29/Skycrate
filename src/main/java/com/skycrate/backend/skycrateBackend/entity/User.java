@@ -56,7 +56,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // or return username if that's your login key
+        return username; // or return username if that's your login key
     }
 
     @Override

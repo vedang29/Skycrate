@@ -2,15 +2,17 @@ package com.skycrate.backend.skycrateBackend.controller;
 
 import com.skycrate.backend.skycrateBackend.dto.LoginRequest;
 import com.skycrate.backend.skycrateBackend.dto.LoginResponse;
+import com.skycrate.backend.skycrateBackend.dto.RegisterUserDto;
 import com.skycrate.backend.skycrateBackend.dto.TokenRefreshRequest;
 import com.skycrate.backend.skycrateBackend.dto.TokenRefreshResponse;
 import com.skycrate.backend.skycrateBackend.entity.RefreshToken;
 import com.skycrate.backend.skycrateBackend.entity.User;
 import com.skycrate.backend.skycrateBackend.repository.UserRepository;
 import com.skycrate.backend.skycrateBackend.security.TokenBlacklistService;
+import com.skycrate.backend.skycrateBackend.services.AuthenticationService;
 import com.skycrate.backend.skycrateBackend.services.JwtService;
-import com.skycrate.backend.skycrateBackend.services.RefreshTokenService;
 import com.skycrate.backend.skycrateBackend.services.RateLimiterService;
+import com.skycrate.backend.skycrateBackend.services.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +29,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final TokenBlacklistService tokenBlacklistService;
     private final RateLimiterService rateLimiterService;
+    private final AuthenticationService authenticationService;
 
     public AuthController(
             AuthenticationManager authManager,
@@ -34,7 +37,8 @@ public class AuthController {
             UserRepository userRepository,
             RefreshTokenService refreshTokenService,
             TokenBlacklistService tokenBlacklistService,
-            RateLimiterService rateLimiterService
+            RateLimiterService rateLimiterService,
+            AuthenticationService authenticationService
     ) {
         this.authManager = authManager;
         this.jwtService = jwtService;
@@ -42,6 +46,14 @@ public class AuthController {
         this.refreshTokenService = refreshTokenService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.rateLimiterService = rateLimiterService;
+        this.authenticationService = authenticationService;
+    }
+
+    // New Register Endpoint
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterUserDto request) {
+        User user = authenticationService.signUp(request);
+        return ResponseEntity.ok("User registered successfully with username: " + user.getUsername());
     }
 
     @PostMapping("/login")
