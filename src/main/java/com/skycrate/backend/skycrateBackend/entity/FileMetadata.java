@@ -30,14 +30,7 @@ public class FileMetadata {
     @Column(nullable = false)
     private byte[] iv;
 
-    public void setUsername(String username) { this.username = username; }
-    public void setFilePath(String filePath) { this.filePath = filePath; }
-    public void setSalt(byte[] salt) { this.salt = salt; }
-    public void setIv(byte[] iv) { this.iv = iv; }
-
-    public String getUsername() { return this.username; }
-    public String getFilePath() { return this.filePath; }
-    public byte[] getSalt() { return this.salt; }
-    public byte[] getIv() { return this.iv; }
+    @Column(nullable = false)
+    private long uploadedAt;
 
 }

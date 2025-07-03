@@ -1,79 +1,70 @@
 package com.skycrate.backend.skycrateBackend.controller;
 
-import com.skycrate.backend.skycrateBackend.entity.FileMetadata;
-import com.skycrate.backend.skycrateBackend.repository.FileMetadataRepository;
-import com.skycrate.backend.skycrateBackend.security.EncryptionService;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
+import com.skycrate.backend.skycrateBackend.services.FileService;
+import com.skycrate.backend.skycrateBackend.services.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.crypto.SecretKey;
-import java.io.OutputStream;
-import java.security.SecureRandom;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
 
-    @Autowired
-    private FileSystem hdfs;
+    private final FileService fileService;
+    private final JwtService jwtService;
 
-    @Autowired
-    private FileMetadataRepository metadataRepo;
-
-    @PostMapping("/upload")
-    public String upload(@RequestParam("file") MultipartFile file,
-                         @RequestParam("password") String password,
-                         Authentication auth) throws Exception {
-
-        byte[] fileBytes = file.getBytes();
-        byte[] salt = EncryptionService.generateSalt();
-        byte[] iv = new byte[12];
-        new SecureRandom().nextBytes(iv);
-        SecretKey key = EncryptionService.deriveKey(password, salt);
-
-        byte[] encrypted = EncryptionService.encrypt(fileBytes, key, iv);
-        String pathStr = "/user/" + auth.getName() + "/" + file.getOriginalFilename();
-        Path hdfsPath = new Path(pathStr);
-
-        try (FSDataOutputStream out = hdfs.create(hdfsPath, true)) {
-            out.write(encrypted);
-        }
-
-        FileMetadata metadata = new FileMetadata();
-        metadata.setUsername(auth.getName());
-        metadata.setFilePath(pathStr);
-        metadata.setSalt(salt);
-        metadata.setIv(iv);
-        metadataRepo.save(metadata);
-
-        return "File uploaded and encrypted successfully!";
+    public FileController(FileService fileService, JwtService jwtService) {
+        this.fileService = fileService;
+        this.jwtService = jwtService;
     }
 
-    @GetMapping("/download")
-    public void download(@RequestParam("path") String path,
-                         @RequestParam("password") String password,
-                         Authentication auth,
-                         OutputStream responseStream) throws Exception {
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("password") String password,
+            HttpServletRequest request
+    ) {
+        try {
+            String token = extractToken(request);
+            String username = jwtService.extractUsername(token);
 
-        Optional<FileMetadata> optional = metadataRepo.findByFilePathAndUsername(path, auth.getName());
-        if (optional.isEmpty()) {
-            throw new SecurityException("You are not authorized to access this file.");
+            fileService.uploadEncryptedFile(username, password, file.getBytes(), file.getOriginalFilename());
+
+            return ResponseEntity.ok("File uploaded and encrypted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("File upload failed: " + e.getMessage());
         }
+    }
 
-        FileMetadata metadata = optional.get();
-        SecretKey key = EncryptionService.deriveKey(password, metadata.getSalt());
+    @GetMapping("/download/{filename}")
+    public ResponseEntity<?> downloadFile(
+            @PathVariable String filename,
+            @RequestParam("password") String password,
+            HttpServletRequest request
+    ) {
+        try {
+            String token = extractToken(request);
+            String username = jwtService.extractUsername(token);
 
-        try (FSDataInputStream input = hdfs.open(new Path(path))) {
-            byte[] encrypted = input.readAllBytes();
-            byte[] decrypted = EncryptionService.decrypt(encrypted, key, metadata.getIv());
-            responseStream.write(decrypted);
+            byte[] decryptedData = fileService.downloadDecryptedFile(username, password, filename);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(decryptedData);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("File download failed: " + e.getMessage());
         }
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
+        return authHeader.substring(7);
     }
 }
