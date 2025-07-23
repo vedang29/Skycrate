@@ -80,15 +80,15 @@ public class EncryptionUtil {
         return cipher.doFinal(data);
     }
 
-    // --------- Encrypt/decrypt RSA private key using AES derived from password ---------
-
-    public static byte[] encryptPrivateKey(PrivateKey privateKey, String password, byte[] salt, byte[] iv) throws Exception {
-        SecretKey aesKey = deriveKey(password.toCharArray(), salt);
-        return encrypt(privateKey.getEncoded(), aesKey, iv);
-    }
-
-    public static byte[] decryptPrivateKey(byte[] encryptedPrivateKey, String password, byte[] salt, byte[] iv) throws Exception {
-        SecretKey aesKey = deriveKey(password.toCharArray(), salt);
-        return decrypt(encryptedPrivateKey, aesKey, iv);
-    }
+//    // --------- Encrypt/decrypt RSA private key using AES derived from password ---------
+//
+//    public static byte[] encryptPrivateKey(PrivateKey privateKey, String password, byte[] salt, byte[] iv) throws Exception {
+//        SecretKey aesKey = deriveKey(password.toCharArray(), salt);
+//        return encrypt(privateKey.getEncoded(), aesKey, iv);
+//    }
+//
+//    public static byte[] decryptPrivateKey(byte[] encryptedPrivateKey, String password, byte[] salt, byte[] iv) throws Exception {
+//        SecretKey aesKey = deriveKey(password.toCharArray(), salt);
+//        return decrypt(encryptedPrivateKey, aesKey, iv);
+//    }
 }

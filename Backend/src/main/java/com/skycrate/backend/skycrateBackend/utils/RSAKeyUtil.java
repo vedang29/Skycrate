@@ -52,22 +52,22 @@ public class RSAKeyUtil {
         return cipher.doFinal(encryptedData);
     }
 
-    // AES key generation
-    public static SecretKey generateAESKey(int keySize) throws NoSuchAlgorithmException {
-        if (keySize != 128 && keySize != 192 && keySize != 256) {
-            throw new IllegalArgumentException("Invalid AES key size. Must be 128, 192, or 256 bits.");
-        }
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-        keyGenerator.init(keySize);
-        return keyGenerator.generateKey();
-    }
-
-    public static byte[] encryptAESKey(SecretKey aesKey, PublicKey publicKey) throws Exception {
-        return encrypt(aesKey.getEncoded(), publicKey);
-    }
-
-    public static SecretKey decryptAESKey(byte[] encryptedAESKey, PrivateKey privateKey, int keySize) throws Exception {
-        byte[] decryptedKey = decrypt(encryptedAESKey, privateKey);
-        return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
-    }
+//    // AES key generation
+//    public static SecretKey generateAESKey(int keySize) throws NoSuchAlgorithmException {
+//        if (keySize != 128 && keySize != 192 && keySize != 256) {
+//            throw new IllegalArgumentException("Invalid AES key size. Must be 128, 192, or 256 bits.");
+//        }
+//        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+//        keyGenerator.init(keySize);
+//        return keyGenerator.generateKey();
+//    }
+//
+//    public static byte[] encryptAESKey(SecretKey aesKey, PublicKey publicKey) throws Exception {
+//        return encrypt(aesKey.getEncoded(), publicKey);
+//    }
+//
+//    public static SecretKey decryptAESKey(byte[] encryptedAESKey, PrivateKey privateKey, int keySize) throws Exception {
+//        byte[] decryptedKey = decrypt(encryptedAESKey, privateKey);
+//        return new SecretKeySpec(decryptedKey, 0, decryptedKey.length, "AES");
+//    }
 }

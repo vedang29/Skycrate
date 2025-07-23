@@ -120,41 +120,41 @@ public class HDFSOperations {
 //        }
 //    }
 
-    public void uploadFile(byte[] fileData, String hdfsPath, String uploadedFileName, String username) {
-        try {
-            FileSystem fs = HDFSConfig.getHDFS();
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(fileData);
-            String finalHdfsPath = hdfsPath.endsWith("/") ? hdfsPath + uploadedFileName : hdfsPath + "/" + uploadedFileName;
-            Path hdfsFilePath = new Path(finalHdfsPath);
-            try (FSDataOutputStream outputStream = fs.create(hdfsFilePath)) {
-                IOUtils.copyBytes(inputStream, outputStream, 4096, true);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file to HDFS: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void downloadFile(String hdfsEncPath, String localPathWithoutExt, String username) {
-        try {
-            FileSystem fs = HDFSConfig.getHDFS();
-            String encFilePath = localPathWithoutExt + ".enc";
-            fs.copyToLocalFile(new Path(hdfsEncPath), new Path(encFilePath));
-
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            PrivateKey privateKey = RSAKeyUtil.getPrivateKeyFromBytes(user.getPrivateKey());
-
-            byte[] encryptedFileContent = Files.readAllBytes(Paths.get(encFilePath));
-            byte[] decryptedFileContent = RSAKeyUtil.decrypt(encryptedFileContent, privateKey);
-
-            Files.write(Paths.get(localPathWithoutExt), decryptedFileContent);
-            Files.deleteIfExists(Paths.get(encFilePath));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to download or decrypt file: " + e.getMessage(), e);
-        }
-    }
+//    public void uploadFile(byte[] fileData, String hdfsPath, String uploadedFileName, String username) {
+//        try {
+//            FileSystem fs = HDFSConfig.getHDFS();
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(fileData);
+//            String finalHdfsPath = hdfsPath.endsWith("/") ? hdfsPath + uploadedFileName : hdfsPath + "/" + uploadedFileName;
+//            Path hdfsFilePath = new Path(finalHdfsPath);
+//            try (FSDataOutputStream outputStream = fs.create(hdfsFilePath)) {
+//                IOUtils.copyBytes(inputStream, outputStream, 4096, true);
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException("Failed to upload file to HDFS: " + e.getMessage(), e);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public void downloadFile(String hdfsEncPath, String localPathWithoutExt, String username) {
+//        try {
+//            FileSystem fs = HDFSConfig.getHDFS();
+//            String encFilePath = localPathWithoutExt + ".enc";
+//            fs.copyToLocalFile(new Path(hdfsEncPath), new Path(encFilePath));
+//
+//            User user = userRepository.findByUsername(username)
+//                    .orElseThrow(() -> new RuntimeException("User not found"));
+//            PrivateKey privateKey = RSAKeyUtil.getPrivateKeyFromBytes(user.getPrivateKey());
+//
+//            byte[] encryptedFileContent = Files.readAllBytes(Paths.get(encFilePath));
+//            byte[] decryptedFileContent = RSAKeyUtil.decrypt(encryptedFileContent, privateKey);
+//
+//            Files.write(Paths.get(localPathWithoutExt), decryptedFileContent);
+//            Files.deleteIfExists(Paths.get(encFilePath));
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to download or decrypt file: " + e.getMessage(), e);
+//        }
+//    }
 
     public void createFolder(String hdfsPath) {
         try {
